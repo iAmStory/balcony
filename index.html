@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Balcony Surprise</title>
+    <title>Romantic Notes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -53,9 +53,30 @@
         #startOverBtn {
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
         }
+
+        /* Speaker Button Styling */
+        #speakerBtn {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        #speakerBtn:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
+
+    <!-- Speaker Button -->
+    <button id="speakerBtn" class="absolute top-6 right-6 bg-white text-pink-500 w-12 h-12 rounded-full shadow-lg hover:bg-pink-50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-75 flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <!-- Speaker On Icon (default) -->
+        <svg id="speakerOnIcon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.5 13.5H2a1 1 0 01-1-1v-5a1 1 0 011-1h2.5l3.883-3.324zM16 7.5a1 1 0 011.414 0 5 5 0 010 7.071A1 1 0 0116 13.157a3 3 0 000-4.314zm-2 2a1 1 0 011.414 0 1 1 0 010 1.414A1 1 0 0114 9.5z" clip-rule="evenodd"></path>
+        </svg>
+        <!-- Speaker Off Icon (hidden by default) -->
+        <svg id="speakerOffIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.824L4.5 13.5H2a1 1 0 01-1-1v-5a1 1 0 011-1h2.5l3.883-3.324zM17.707 5.293a1 1 0 010 1.414L15.414 9l2.293 2.293a1 1 0 11-1.414 1.414L14 10.414l-2.293 2.293a1 1 0 01-1.414-1.414L12.586 9 10.293 6.707a1 1 0 011.414-1.414L14 7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+        </svg>
+    </button>
 
     <!-- Main container for the app -->
     <div class="relative w-full h-full flex items-center justify-center flex-col">
@@ -75,11 +96,37 @@
         // --- DOM Elements ---
         const pageStack = document.getElementById('pageStack');
         const startOverBtn = document.getElementById('startOverBtn');
+        const speakerBtn = document.getElementById('speakerBtn');
+        const speakerOnIcon = document.getElementById('speakerOnIcon');
+        const speakerOffIcon = document.getElementById('speakerOffIcon');
+        
+        // --- Audio Element ---
+        const audio = new Audio('./song.mp3');
         
         // --- State & Config ---
         const totalPages = 10;
         let removedPagesCount = 0;
+        let isPlaying = false;
         
+        /**
+         * Toggles audio playback and updates the speaker icon
+         */
+        function toggleAudio() {
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                speakerOnIcon.classList.add('hidden');
+                speakerOffIcon.classList.remove('hidden');
+            } else {
+                audio.play().catch(error => {
+                    console.log('Audio playback failed:', error);
+                });
+                isPlaying = true;
+                speakerOnIcon.classList.remove('hidden');
+                speakerOffIcon.classList.add('hidden');
+            }
+        }
+
         /**
          * Creates and initializes the stack of pages with images.
          */
@@ -138,6 +185,20 @@
                 return;
             }
 
+            // Check if this is the first page (highest z-index, which is totalPages)
+            const pageNumber = parseInt(clickedPage.dataset.pageNumber);
+            if (pageNumber === 1) {
+                // Play music when first page is clicked
+                audio.play().catch(error => {
+                    console.log('Audio playback failed:', error);
+                });
+                isPlaying = true;
+                
+                // Show the speaker button
+                speakerBtn.classList.remove('opacity-0');
+                speakerBtn.classList.add('opacity-100');
+            }
+
             clickedPage.classList.add('removed');
             removedPagesCount++;
 
@@ -151,6 +212,9 @@
 
         // Event listener for the start over button
         startOverBtn.addEventListener('click', resetStack);
+
+        // Event listener for the speaker button
+        speakerBtn.addEventListener('click', toggleAudio);
 
         // --- Initial Setup ---
         createPages();
